@@ -13,12 +13,10 @@ Getting started with Dodos is easy and only requires Python 3.5+.
 ```sh
 $ git clone --quiet https://github.com/DennisMitchell/dodos.git
 $ cd dodos
-$ ./dodos examples/cat.dodos 109 101 111 119 10
-109
-101
-111
-119
-10
+$ ./dodos -B examples/helloworld.dodos
+Hello, World!
+$ ./dodos -B examples/cat.dodos 109 101 111 119 10
+meow
 ```
 
 For more information, run `./dodos -h`.
