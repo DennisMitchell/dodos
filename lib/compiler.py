@@ -21,12 +21,12 @@ def dodosc(filename):
 
 	with open(filename, 'rb') as lines:
 		for line in lines:
-			tokens = bytes(filter((32).__le__, line.replace(b'\t', b' '))).split()
-			if not tokens: continue
+			line = bytes(filter((32).__le__, line.replace(b'\t', b' ')))
+			tokens = line.split()
 
-			if line[:1].isspace():
+			if line[:1] == b' ':
 				emit_monad(code.append, tokens, defined, header)
-			else:
+			elif tokens:
 				emit_return(code.append)
 				emit_define(code.append, tokens, defined)
 
