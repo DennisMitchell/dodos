@@ -2,11 +2,15 @@
 
 from argparse import ArgumentParser
 from lib.compiler import dodosc
-from resource import setrlimit, RLIM_INFINITY, RLIMIT_STACK
 from sys import setrecursionlimit
 
 setrecursionlimit(1 << 30)
-setrlimit(RLIMIT_STACK, (RLIM_INFINITY, RLIM_INFINITY))
+
+try:
+	from resource import setrlimit, RLIM_INFINITY, RLIMIT_STACK
+	setrlimit(RLIMIT_STACK, (RLIM_INFINITY, RLIM_INFINITY))
+except:
+	pass
 
 def dodos(*argv):
 	argparser = ArgumentParser(description = 'Dodos Only Divide Or Surrender')
