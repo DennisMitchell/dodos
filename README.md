@@ -25,7 +25,7 @@ Alternatively, you can use the [Dodos interpreter on Try It Online](https://tio.
 
 ### Syntax
 
-Dodos source code consists entirely of function definitions. Each function takes a tuple of natural numbers (integers strictly grater than zero) as its sole argument and, likewise, returns a tuple of natural numbers.
+Dodos source code consists entirely of function definitions. Each function takes a tuple of natural numbers (non-negative integers) as its sole argument and, likewise, returns a tuple of natural numbers.
 
 Function definitions consist of a single line containing one or more names for the function, followed by the function body. Each line of the function body must begin with a tabulator or a space.
 
@@ -73,7 +73,7 @@ The simplest Dodos program that computes the sum of its input arguments looks li
 
 Most programming languages allow function definitions such as `f(x) = f(x)` or `f(x) = f(x + 1)` and actually try to compute **f(x)** by computing **f(x)** or even **f(x + 1)**. The result is an infinite loop that will never return any output.
 
-The *Divide Or Surrender* paradigm doesn't such nonsense. If, while trying to compute **f(x)**, we find ourselves in need of computing **f(y)**, the following happens.
+The *Divide Or Surrender* paradigm doesn't allow such nonsense. If, while trying to compute **f(x)**, we find ourselves in need of computing **f(y)**, the following happens.
 
 * If **y < x**, the function call proceeds as usual.
 * If **y ≥ x**, a *Surrender* exception is raised, the function call attempting to compute **f(y)** is interrupted, and its argument is returned unchanged.
