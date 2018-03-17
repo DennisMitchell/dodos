@@ -3,13 +3,13 @@ builtins = \
 '''
 class Surrender(Exception): pass
 
-def ___dab(*argv):
+def ___dab(argv):
 	return argv[1:]
 
-def ___dip(*argv):
+def ___dip(argv):
 	return tuple(abs(arg - 1) for arg in argv)
 
-def ___dot(*argv):
+def ___dot(argv):
 	return sum(argv),
 '''
 
@@ -51,11 +51,11 @@ def emit_define(emit, tokens, defined):
 
 	for token in tokens[1:]:
 		name = funcname(token)
-		emit('\ndef {}(*argv, call_stack = []):\n'.format(name))
-		emit('\treturn {}(*argv, call_stack =  call_stack)\n'.format(first_name))
+		emit('\ndef {}(argv, call_stack = []):\n'.format(name))
+		emit('\treturn {}(argv, call_stack =  call_stack)\n'.format(first_name))
 
-	emit('\ndef {}(*argv, call_stack = []):\n'.format(first_name))
-	emit('\targcv = (len(argv), *argv)\n')
+	emit('\ndef {}(argv, call_stack = []):\n'.format(first_name))
+	emit('\targcv = (len(argv), argv)\n')
 	emit('\tif call_stack and not argcv < call_stack[-1]: raise Surrender\n')
 	emit('\tcall_stack.append(argcv)\n')
 	emit('\tretval = []\n')
@@ -66,16 +66,16 @@ def emit_monad(emit, tokens, defined, header):
 
 	for token in reversed(tokens):
 		name = funcname(token)
-		emit('\t\ttemp = {}(*temp)\n'.format(name))
+		emit('\t\ttemp = {}(temp)\n'.format(name))
 
 		if name not in defined:
-			header.append('def {}(*argv):\n\treturn argv\n'.format(funcname(token)))
+			header.append('def {}(argv):\n\treturn argv\n'.format(funcname(token)))
 			defined.add(name)
 
 	emit('\t\tretval.extend(temp)\n')
 
 def emit_return(emit):
 	emit('\t\tpass\n')
-	emit('\texcept Surrender:\n\t\tretval[:] = argv\n\n')
+	emit('\texcept Surrender:\n\t\tretval = argv\n\n')
 	emit('\tcall_stack.pop()\n')
-	emit('\treturn retval\n')
+	emit('\treturn tuple(retval)\n')

@@ -43,7 +43,7 @@ def dodos(*argv):
 	)
 
 	args = argparser.parse_args(list(argv) or None)
-	args.write_output(dodosc(args.file)(*args.parse_input(args.input)))
+	args.write_output(dodosc(args.file)(tuple(args.parse_input(args.input))))
 
 def map_abs(inv):
 	return map(abs, inv)
