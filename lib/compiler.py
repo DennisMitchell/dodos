@@ -1,81 +1,48 @@
-builtins = \
-           \
-'''
-class Surrender(Exception): pass
-
-def ___dab(argv):
-	return argv[1:]
-
-def ___dip(argv):
-	return tuple(abs(arg - 1) for arg in argv)
-
-def ___dot(argv):
-	return sum(argv),
-'''
+from .builtins import builtins, intrinsics
+from .generate import emit_define, emit_header, emit_monad, emit_return
+from .optimizer import funcdeps, recognize_intrinsics
+from .parser import parse
 
 def dodosc(filename):
-	code = [builtins]
-	header = []
-	defined = {'___dab', '___dip', '___dot'}
-	emit_define(code.append, [b'main'], defined)
+	code = []
+	emit_header(code.append)
 
 	with open(filename, 'rb') as lines:
-		for line in lines:
-			line = bytes(filter((32).__le__, line.replace(b'\t', b' ')))
-			tokens = line.split()
+		funcs = parse(lines)
 
-			if line[:1] == b' ':
-				emit_monad(code.append, tokens, defined, header)
-			elif tokens:
-				emit_return(code.append)
-				emit_define(code.append, tokens, defined)
+	inline_intrinsics(funcs)
+	recognize_intrinsics(funcs)
+	inline_intrinsics(funcs)
+	deps = funcdeps(funcs)
 
-	emit_return(code.append)
-	py_source = ''.join(header + code)
+	for name, body in funcs.items():
+		recursive = name in deps[name]
+		emit_define(code.append, name, recursive)
+		for monad in body: emit_monad(code.append, monad, recursive)
+		emit_return(code.append, recursive)
+
+	py_source = ''.join(code)
 	namespace = {}
 	exec(py_source, namespace)
 
 	return namespace['___main']
 
-def funcname(bytestring):
-	try:
-		string = '___{}'.format(bytestring.decode('ascii'))
-		if not string.isidentifier(): raise ValueError
-		return string
-	except (UnicodeDecodeError, ValueError):
-		return '__{:x}'.format(int.from_bytes(bytestring, 'big'))
+def inline_intrinsics(funcs):
+	while True:
+		macros = {}
 
-def emit_define(emit, tokens, defined):
-	first_name = funcname(tokens[0])
-	defined.add(first_name)
+		for name, body in funcs.items():
+			if name == '___main':
+				continue
 
-	for token in tokens[1:]:
-		name = funcname(token)
-		emit('\ndef {}(argv, call_stack = []):\n'.format(name))
-		emit('\treturn {}(argv, call_stack =  call_stack)\n'.format(first_name))
+			if len(body) == 1 and len(body[0]) == 1 and body[0][0] in intrinsics:
+				macros[name] = body[0][0]
 
-	emit('\ndef {}(argv, call_stack = []):\n'.format(first_name))
-	emit('\targcv = (len(argv), argv)\n')
-	emit('\tif call_stack and not argcv < call_stack[-1]: raise Surrender\n')
-	emit('\tcall_stack.append(argcv)\n')
-	emit('\tretval = []\n')
-	emit('\n\ttry:\n')
+		if not macros: break
+		for name in macros: del funcs[name]
 
-def emit_monad(emit, tokens, defined, header):
-	emit('\t\ttemp = argv\n')
-
-	for token in reversed(tokens):
-		name = funcname(token)
-		emit('\t\ttemp = {}(temp)\n'.format(name))
-
-		if name not in defined:
-			header.append('def {}(argv):\n\treturn argv\n'.format(funcname(token)))
-			defined.add(name)
-
-	emit('\t\tretval.extend(temp)\n')
-
-def emit_return(emit):
-	emit('\t\tpass\n')
-	emit('\texcept Surrender:\n\t\tretval = argv\n\n')
-	emit('\tcall_stack.pop()\n')
-	emit('\treturn tuple(retval)\n')
+		for body in funcs.values():
+			for monad in body:
+				for index, name in enumerate(monad):
+					if name in macros:
+						monad[index] = macros[name]
