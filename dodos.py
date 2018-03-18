@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser
 from lib.compiler import dodosc
-from sys import setrecursionlimit
+from sys import setrecursionlimit, stderr
 
 setrecursionlimit(1 << 30)
 
@@ -61,4 +61,8 @@ def write_nums(outv):
 	for number in outv:	print(number)
 
 if __name__ == '__main__':
-	dodos()
+	try:
+		dodos()
+	except KeyboardInterrupt:
+		if stderr.isatty(): stderr.write('\n')
+		raise SystemExit(130)
